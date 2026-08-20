@@ -9,6 +9,8 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             #[cfg(target_os = "macos")]
             {
@@ -61,6 +63,12 @@ pub fn run() {
                 let menu = MenuBuilder::new(app)
                     .items(&[&app_menu, &file_menu, &edit_menu, &ink_menu, &help_menu])
                     .build()?;
+
+                let handle = app.handle().clone();
+                menu.on_menu_event(move |app, event| {
+                    let id = event.id().as_ref();
+                    let _ = app.emit("menu-event", id);
+                })?;
 
                 app.set_menu(menu)?;
             }
